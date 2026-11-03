@@ -20,7 +20,7 @@
     .datebar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}.datebar input,.taskform input,.taskform select{background:#0e1929;border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px 11px;min-height:40px}.datebar input{color-scheme:dark}.primary{border:0;background:var(--blue);color:#081426;border-radius:9px;padding:10px 14px;font-weight:750}.ghost{border:1px solid var(--line);background:#17263b;color:var(--text);border-radius:9px;padding:8px 11px}
     .tasklist{display:grid;gap:8px}.task{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:11px;align-items:center;padding:12px;background:#0f1a2a;border:1px solid #22334a;border-radius:11px}.task input{width:17px;height:17px;accent-color:var(--green)}.tasktitle{font-weight:650;font-size:13px}.task.done .tasktitle{text-decoration:line-through;color:#8090a5}.taskmeta{font-size:11px;color:var(--muted);margin-top:2px}.tag{font-size:10px;border-radius:99px;padding:4px 8px;background:#1d3450;color:#a9c8ff;white-space:nowrap}.empty{padding:26px 12px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px;font-size:13px}
     .taskform{display:grid;grid-template-columns:1.4fr .8fr .8fr auto;gap:8px;margin:13px 0 16px}.taskform input,.taskform select{min-width:0;width:100%}.progressrow{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin:12px 0 7px}.progress{height:8px;background:#25364c;border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:99px;transition:width .2s}
-    .subjectlist{display:grid;gap:14px}.subject{display:grid;grid-template-columns:1fr auto;gap:6px}.subjectname{font-size:13px;font-weight:650}.subjectcount{font-size:11px;color:var(--muted)}.subject .progress{grid-column:1/-1;height:6px}
+    .viewtabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 15px}.viewtab{border:1px solid var(--line);background:#0e1929;color:var(--muted);border-radius:9px;padding:9px 15px;font-weight:650}.viewtab.active{background:#24416a;border-color:#4777b7;color:white}.viewpanel[hidden]{display:none}.weekgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.daytile{background:#0f1a2a;border:1px solid #22334a;border-radius:11px;padding:10px;min-height:125px}.daytile.todaytile{border-color:var(--blue);box-shadow:inset 0 0 0 1px #4777b7}.dayhead{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:4px}.daynum{font-size:18px;font-weight:750;margin:5px 0}.daystats{font-size:11px;color:var(--muted)}.daybar{height:5px;background:#25364c;border-radius:9px;overflow:hidden;margin-top:9px}.daybar span{display:block;height:100%;background:var(--cyan)}.weekitems{font-size:10px;color:#c7d7ed;margin-top:7px;display:grid;gap:4px}.weekitems div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.monthhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 14px}.monthtitle{font-weight:750;font-size:16px}.monthgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.weekday{font-size:11px;color:var(--muted);text-align:center;padding:5px}.monthday{background:#0f1a2a;border:1px solid #22334a;border-radius:9px;min-height:76px;padding:7px;font-size:12px}.monthday.mutedday{opacity:.35}.monthday.currentday{border-color:var(--blue)}.monthday .count{display:block;color:var(--cyan);font-size:10px;margin-top:5px}.monthsummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:14px}.monthmetric{background:#0f1a2a;border:1px solid #22334a;border-radius:10px;padding:11px}.monthmetric small{display:block;color:var(--muted);font-size:10px}.monthmetric b{font-size:20px}.subjectlist{display:grid;gap:14px}.subject{display:grid;grid-template-columns:1fr auto;gap:6px}.subjectname{font-size:13px;font-weight:650}.subjectcount{font-size:11px;color:var(--muted)}.subject .progress{grid-column:1/-1;height:6px}
     .notice{margin-top:16px;padding:12px 14px;border-radius:11px;background:#17263b;border:1px solid var(--line);color:var(--muted);font-size:12px}.notice b{color:var(--amber)}
     .footer{color:#71839b;font-size:11px;text-align:center;margin-top:22px}.mobilemenu{display:none}
     @media(max-width:1050px){.app{grid-template-columns:190px minmax(0,1fr)}main{padding:22px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.layout{grid-template-columns:1fr}.taskform{grid-template-columns:1fr 1fr}.taskform input:first-child{grid-column:1/-1}}
@@ -94,7 +94,46 @@
   $('plan-date').value=iso(today);
   $('today-label').textContent=today.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   const tasksFor=date=>Array.isArray(data[date])?data[date]:[];
-  function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+  let activeView='daily',weekOffset=0,monthOffset=0;
+  const dateObj=s=>new Date(s+'T12:00:00');
+  const dateKey=d=>iso(d);
+  function save(){localStorage.setItem(KEY,JSON.stringify(data));render();renderWeek();renderMonth()}
+  function setView(view){
+    activeView=view;
+    document.querySelectorAll('.viewtab').forEach(b=>{const on=b.dataset.view===view;b.classList.toggle('active',on);b.setAttribute('aria-selected',String(on))});
+    ['daily','weekly','monthly'].forEach(v=>{$(v+'-view').hidden=v!==view});
+    if(view==='weekly')renderWeek();if(view==='monthly')renderMonth();
+  }
+  function renderWeek(){
+    const base=dateObj($('plan-date').value||iso(today));const monday=new Date(base);monday.setDate(base.getDate()-((base.getDay()+6)%7)+weekOffset*7);
+    const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
+    $('week-range').textContent=monday.toLocaleDateString(undefined,{day:'numeric',month:'short'})+' – '+sunday.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+    const grid=$('week-grid');grid.innerHTML='';let total=0,done=0;
+    for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(monday.getDate()+i);const key=dateKey(d),arr=tasksFor(key),n=arr.length,nd=arr.filter(t=>t.done).length;total+=n;done+=nd;
+      const tile=document.createElement('button');tile.type='button';tile.className='daytile'+(key===iso(today)?' todaytile':'');tile.style.textAlign='left';tile.style.color='inherit';
+      const head=document.createElement('div');head.className='dayhead';head.textContent=d.toLocaleDateString(undefined,{weekday:'short'});
+      const num=document.createElement('div');num.className='daynum';num.textContent=d.getDate();
+      const stats=document.createElement('div');stats.className='daystats';stats.textContent=nd+' / '+n+' done';
+      const bar=document.createElement('div');bar.className='daybar';const fill=document.createElement('span');fill.style.width=(n?nd/n*100:0)+'%';bar.append(fill);
+      const items=document.createElement('div');items.className='weekitems';arr.slice(0,2).forEach(t=>{const line=document.createElement('div');line.textContent='• '+t.title;items.append(line)});if(n>2){const more=document.createElement('div');more.textContent='+'+(n-2)+' more';items.append(more)}
+      tile.append(head,num,stats,bar,items);tile.addEventListener('click',()=>{$('plan-date').value=key;setView('daily');render()});grid.append(tile);
+    }
+    $('week-progress-label').textContent=done+' of '+total+' done';$('week-progress-bar').style.width=(total?done/total*100:0)+'%';
+  }
+  function renderMonth(){
+    const chosen=dateObj($('plan-date').value||iso(today)),first=new Date(chosen.getFullYear(),chosen.getMonth()+monthOffset,1),year=first.getFullYear(),month=first.getMonth();
+    $('month-title').textContent=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+    const grid=$('month-grid');grid.innerHTML='';
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(day=>{const el=document.createElement('div');el.className='weekday';el.textContent=day;grid.append(el)});
+    const start=new Date(year,month,1);const offset=(start.getDay()+6)%7;const totalDays=new Date(year,month+1,0).getDate();const cells=Math.ceil((offset+totalDays)/7)*7;
+    let total=0,done=0;
+    for(let i=0;i<cells;i++){const dayNum=i-offset+1;const cell=document.createElement('button');cell.type='button';cell.className='monthday';cell.style.color='inherit';cell.style.textAlign='left';
+      if(dayNum<1||dayNum>totalDays){cell.classList.add('mutedday');const outside=new Date(year,month,dayNum);cell.textContent=outside.getDate();cell.disabled=true}
+      else{const d=new Date(year,month,dayNum),key=dateKey(d),arr=tasksFor(key),nd=arr.filter(t=>t.done).length;total+=arr.length;done+=nd;cell.textContent=dayNum;if(key===iso(today))cell.classList.add('currentday');if(arr.length){const count=document.createElement('span');count.className='count';count.textContent=nd+'/'+arr.length+' done';cell.append(count)}cell.addEventListener('click',()=>{$('plan-date').value=key;setView('daily');render()})}
+      grid.append(cell);
+    }
+    $('month-total').textContent=total;$('month-done').textContent=done;$('month-rate').textContent=(total?Math.round(done/total*100):0)+'%';
+  }
   function render(){
     const date=$('plan-date').value||iso(today),tasks=tasksFor(date),done=tasks.filter(t=>t.done).length,total=tasks.length,rate=total?Math.round(done/total*100):0;
     $('day-name').textContent=new Date(date+'T12:00:00').toLocaleDateString(undefined,{weekday:'long'});
@@ -111,7 +150,10 @@
     const all=Object.values(data).flat();$('all-done').textContent=all.filter(t=>t.done).length;$('all-pending').textContent=all.filter(t=>!t.done).length;$('all-dates').textContent=Object.keys(data).filter(k=>data[k]?.length).length;
   }
   $('task-form').addEventListener('submit',e=>{e.preventDefault();const title=$('task-title').value.trim();if(!title)return;const date=$('plan-date').value||iso(today);data[date]=tasksFor(date);data[date].push({id:Date.now(),title,subject:$('task-subject').value,kind:$('task-kind').value,done:false});$('task-title').value='';save()});
-  $('plan-date').addEventListener('change',render);$('today-btn').addEventListener('click',()=>{$('plan-date').value=iso(today);render()});
+  $('plan-date').addEventListener('change',()=>{weekOffset=0;monthOffset=0;render();renderWeek();renderMonth()});$('today-btn').addEventListener('click',()=>{$('plan-date').value=iso(today);weekOffset=0;monthOffset=0;render();renderWeek();renderMonth()});
+  document.querySelectorAll('.viewtab').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+  $('week-prev').addEventListener('click',()=>{weekOffset--;renderWeek()});$('week-next').addEventListener('click',()=>{weekOffset++;renderWeek()});
+  $('month-prev').addEventListener('click',()=>{monthOffset--;renderMonth()});$('month-next').addEventListener('click',()=>{monthOffset++;renderMonth()});
   $('nav-today').addEventListener('click',()=>$('planner').scrollIntoView({behavior:'smooth'}));$('nav-subjects').addEventListener('click',()=>$('subjects').scrollIntoView({behavior:'smooth'}));$('nav-progress').addEventListener('click',()=>$('progress').scrollIntoView({behavior:'smooth'}));
   render();
 })();
