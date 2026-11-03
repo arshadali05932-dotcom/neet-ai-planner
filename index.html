@@ -50,6 +50,12 @@
     <div class="layout">
       <section class="card" id="planner">
         <div class="sectionhead"><h2>Daily study planner</h2><span class="pill">LOCAL PLAN</span></div>
+        <div class="viewtabs" role="tablist" aria-label="Planner views">
+          <button class="viewtab active" data-view="daily" role="tab" aria-selected="true">Daily</button>
+          <button class="viewtab" data-view="weekly" role="tab" aria-selected="false">Weekly</button>
+          <button class="viewtab" data-view="monthly" role="tab" aria-selected="false">Monthly</button>
+        </div>
+        <div id="daily-view" class="viewpanel">
         <div class="datebar"><input type="date" id="plan-date" aria-label="Select planner date"><button class="ghost" id="today-btn">Today</button><span class="pill" id="day-name"></span></div>
         <div class="progressrow"><span>Daily completion</span><b id="progress-label">0 of 0 done</b></div><div class="progress"><span id="progress-bar"></span></div>
         <form class="taskform" id="task-form">
@@ -59,6 +65,23 @@
           <button class="primary" type="submit">+ Add task</button>
         </form>
         <div class="tasklist" id="task-list"><div class="empty">No tasks yet. Add your first study task above.</div></div>
+        </div>
+        <div id="weekly-view" class="viewpanel" hidden>
+          <div class="datebar"><button class="ghost" id="week-prev">← Previous</button><span class="pill" id="week-range">This week</span><button class="ghost" id="week-next">Next →</button></div>
+          <div class="progressrow"><span>Weekly task completion</span><b id="week-progress-label">0 of 0 done</b></div><div class="progress"><span id="week-progress-bar"></span></div>
+          <div class="weekgrid" id="week-grid" style="margin-top:14px"></div>
+          <div class="notice">Select a day tile to open its Daily plan and add or update tasks for that date.</div>
+        </div>
+        <div id="monthly-view" class="viewpanel" hidden>
+          <div class="monthhead"><button class="ghost" id="month-prev">← Previous</button><span class="monthtitle" id="month-title"></span><button class="ghost" id="month-next">Next →</button></div>
+          <div class="monthgrid" id="month-grid"></div>
+          <div class="monthsummary">
+            <div class="monthmetric"><small>Tasks planned</small><b id="month-total">0</b></div>
+            <div class="monthmetric"><small>Completed</small><b id="month-done">0</b></div>
+            <div class="monthmetric"><small>Completion</small><b id="month-rate">0%</b></div>
+          </div>
+          <div class="notice">Monthly view summarizes tasks saved in this planner. Lecture targets will become fully automatic after the 655-lecture catalogue is imported.</div>
+        </div>
       </section>
       <div>
         <section class="card" id="subjects">
