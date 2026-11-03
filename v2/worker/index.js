@@ -79,7 +79,7 @@ export default {
       }
       parts.push({ inline_data: { mime_type: mime, data } });
     }
-    const model = /^[a-zA-Z0-9.-]+$/.test(env.GEMINI_MODEL || "") ? env.GEMINI_MODEL : "gemini-3.8-flash";
+    const model = "gemini-3.5-flash-lite"; // fixed to the model with a listed free standard tier
     let upstream;
     try {
       upstream = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
