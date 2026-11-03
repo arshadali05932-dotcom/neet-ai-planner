@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101a2b">
+  <meta name="description" content="A personal NEET preparation planner for lectures, revision, practice and progress.">
+  <title>NEET AI Planner — Personal Edition</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#121e30;--panel2:#17263b;--line:#26364d;--muted:#91a2b8;--text:#eef4ff;--blue:#75a7ff;--cyan:#63d6d0;--green:#64d6a2;--amber:#f2c36b;--red:#ff8585}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+    button,input,select{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:230px minmax(0,1fr)}
+    aside{background:#0e1929;border-right:1px solid var(--line);padding:26px 16px;display:flex;flex-direction:column;gap:28px}
+    .brand{display:flex;align-items:center;gap:11px;padding:0 8px}.brandmark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#5b8df4,#55d0c8);display:grid;place-items:center;color:#071322;font-weight:900;font-size:18px}.brand strong{display:block;font-size:15px;letter-spacing:.1px}.brand small{color:var(--muted);font-size:11px}
+    nav{display:grid;gap:7px}.navbtn{border:0;background:transparent;color:#a9b8cc;text-align:left;padding:11px 13px;border-radius:10px;display:flex;gap:12px;align-items:center}.navbtn.active,.navbtn:hover{background:#1a2b43;color:white}.navicon{width:20px;text-align:center;color:var(--blue)}
+    .side-note{margin-top:auto;background:#14253a;border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--muted);font-size:12px}.side-note b{color:var(--text);display:block;margin-bottom:5px}
+    main{padding:26px 30px 40px;min-width:0;max-width:1700px;width:100%;margin:auto}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase}.topbar h1{font-size:27px;line-height:1.2;margin:5px 0}.sub{color:var(--muted);font-size:13px}.today{border:1px solid var(--line);background:var(--panel);padding:10px 13px;border-radius:11px;color:var(--muted);white-space:nowrap}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px;min-width:0}.statlabel{color:var(--muted);font-size:12px}.statvalue{font-size:28px;font-weight:750;letter-spacing:-1px;margin:7px 0 2px}.statfoot{font-size:11px;color:var(--muted)}.stataccent{color:var(--cyan)}
+    .layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.9fr);gap:16px;align-items:start}.sectionhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}.sectionhead h2{font-size:16px;margin:0}.pill{border:1px solid var(--line);border-radius:99px;padding:5px 10px;color:var(--muted);font-size:11px}
+    .datebar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}.datebar input,.taskform input,.taskform select{background:#0e1929;border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px 11px;min-height:40px}.datebar input{color-scheme:dark}.primary{border:0;background:var(--blue);color:#081426;border-radius:9px;padding:10px 14px;font-weight:750}.ghost{border:1px solid var(--line);background:#17263b;color:var(--text);border-radius:9px;padding:8px 11px}
+    .tasklist{display:grid;gap:8px}.task{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:11px;align-items:center;padding:12px;background:#0f1a2a;border:1px solid #22334a;border-radius:11px}.task input{width:17px;height:17px;accent-color:var(--green)}.tasktitle{font-weight:650;font-size:13px}.task.done .tasktitle{text-decoration:line-through;color:#8090a5}.taskmeta{font-size:11px;color:var(--muted);margin-top:2px}.tag{font-size:10px;border-radius:99px;padding:4px 8px;background:#1d3450;color:#a9c8ff;white-space:nowrap}.empty{padding:26px 12px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px;font-size:13px}
+    .taskform{display:grid;grid-template-columns:1.4fr .8fr .8fr auto;gap:8px;margin:13px 0 16px}.taskform input,.taskform select{min-width:0;width:100%}.progressrow{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin:12px 0 7px}.progress{height:8px;background:#25364c;border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:99px;transition:width .2s}
+    .subjectlist{display:grid;gap:14px}.subject{display:grid;grid-template-columns:1fr auto;gap:6px}.subjectname{font-size:13px;font-weight:650}.subjectcount{font-size:11px;color:var(--muted)}.subject .progress{grid-column:1/-1;height:6px}
+    .notice{margin-top:16px;padding:12px 14px;border-radius:11px;background:#17263b;border:1px solid var(--line);color:var(--muted);font-size:12px}.notice b{color:var(--amber)}
+    .footer{color:#71839b;font-size:11px;text-align:center;margin-top:22px}.mobilemenu{display:none}
+    @media(max-width:1050px){.app{grid-template-columns:190px minmax(0,1fr)}main{padding:22px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.layout{grid-template-columns:1fr}.taskform{grid-template-columns:1fr 1fr}.taskform input:first-child{grid-column:1/-1}}
+    @media(max-width:650px){.app{display:block}aside{display:none}main{padding:18px 14px}.topbar{align-items:flex-start}.topbar h1{font-size:22px}.today{font-size:11px}.stats{gap:9px}.card{padding:13px}.statvalue{font-size:24px}.task{grid-template-columns:22px minmax(0,1fr)}.task .tag{grid-column:2;justify-self:start}.taskform{grid-template-columns:1fr}.taskform input:first-child{grid-column:auto}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><div class="brandmark">N</div><div><strong>NEET AI Planner</strong><small>PERSONAL EDITION</small></div></div>
+    <nav aria-label="Main navigation">
+      <button class="navbtn active"><span class="navicon">▦</span>Dashboard</button>
+      <button class="navbtn" id="nav-today"><span class="navicon">◷</span>Daily Planner</button>
+      <button class="navbtn" id="nav-subjects"><span class="navicon">▤</span>Subjects</button>
+      <button class="navbtn" id="nav-progress"><span class="navicon">↗</span>Progress</button>
+    </nav>
+    <div class="side-note"><b>Study smart. Stay consistent.</b>Your planner saves tasks on this device. Lecture catalogue import and automatic backlog planning will be added in the next build.</div>
+  </aside>
+  <main>
+    <header class="topbar"><div><div class="eyebrow">Your preparation workspace</div><h1>Good study day.</h1><div class="sub">Plan your work, track your consistency, and keep moving forward.</div></div><div class="today" id="today-label">Today</div></header>
+    <section class="stats">
+      <div class="card"><div class="statlabel">Tasks planned today</div><div class="statvalue" id="stat-total">0</div><div class="statfoot">Your selected date</div></div>
+      <div class="card"><div class="statlabel">Completed</div><div class="statvalue stataccent" id="stat-done">0</div><div class="statfoot">Small wins add up</div></div>
+      <div class="card"><div class="statlabel">Completion rate</div><div class="statvalue" id="stat-rate">0%</div><div class="statfoot">Based on today's tasks</div></div>
+      <div class="card"><div class="statlabel">Lecture catalogue</div><div class="statvalue">—</div><div class="statfoot">655 lectures to be imported</div></div>
+    </section>
+    <div class="layout">
+      <section class="card" id="planner">
+        <div class="sectionhead"><h2>Daily study planner</h2><span class="pill">LOCAL PLAN</span></div>
+        <div class="datebar"><input type="date" id="plan-date" aria-label="Select planner date"><button class="ghost" id="today-btn">Today</button><span class="pill" id="day-name"></span></div>
+        <div class="progressrow"><span>Daily completion</span><b id="progress-label">0 of 0 done</b></div><div class="progress"><span id="progress-bar"></span></div>
+        <form class="taskform" id="task-form">
+          <input id="task-title" maxlength="90" placeholder="Add a study task (e.g. Physics — Kinematics)" required>
+          <select id="task-subject" aria-label="Subject"><option>Physics</option><option>Physical Chemistry</option><option>Inorganic Chemistry</option><option>Organic Chemistry</option><option>Botany</option><option>Zoology</option><option>Revision</option><option>Practice / Test</option><option>Break</option></select>
+          <select id="task-kind" aria-label="Task type"><option>Lecture</option><option>Revision</option><option>PYQ</option><option>MCQ Practice</option><option>Mock Test</option><option>Break</option></select>
+          <button class="primary" type="submit">+ Add task</button>
+        </form>
+        <div class="tasklist" id="task-list"><div class="empty">No tasks yet. Add your first study task above.</div></div>
+      </section>
+      <div>
+        <section class="card" id="subjects">
+          <div class="sectionhead"><h2>Subject overview</h2><span class="pill">6 SUBJECTS</span></div>
+          <div class="subjectlist">
+            <div class="subject"><span class="subjectname">Physics</span><span class="subjectcount">219 lectures</span><div class="progress"><span style="width:0%"></span></div></div>
+            <div class="subject"><span class="subjectname">Physical Chemistry</span><span class="subjectcount">80 lectures</span><div class="progress"><span style="width:0%"></span></div></div>
+            <div class="subject"><span class="subjectname">Inorganic Chemistry</span><span class="subjectcount">57 lectures</span><div class="progress"><span style="width:0%"></span></div></div>
+            <div class="subject"><span class="subjectname">Organic Chemistry</span><span class="subjectcount">81 lectures</span><div class="progress"><span style="width:0%"></span></div></div>
+            <div class="subject"><span class="subjectname">Botany</span><span class="subjectcount">109 lectures</span><div class="progress"><span style="width:0%"></span></div></div>
+            <div class="subject"><span class="subjectname">Zoology</span><span class="subjectcount">109 lectures</span><div class="progress"><span style="width:0%"></span></div></div>
+          </div>
+          <div class="notice"><b>Next build:</b> Import the verified lecture list, then connect lecture completion to subject progress and backlog rescheduling.</div>
+        </section>
+        <section class="card" id="progress" style="margin-top:16px">
+          <div class="sectionhead"><h2>Progress snapshot</h2><span class="pill">ON THIS DEVICE</span></div>
+          <div class="progressrow"><span>All-time tasks completed</span><b id="all-done">0</b></div>
+          <div class="progressrow"><span>Tasks still pending</span><b id="all-pending">0</b></div>
+          <div class="progressrow"><span>Saved planner dates</span><b id="all-dates">0</b></div>
+        </section>
+      </div>
+    </div>
+    <div class="footer">NEET AI Planner · Personal Edition · Your study data stays in this browser for now.</div>
+  </main>
+</div>
+<script>
+(() => {
+  const KEY='neet-ai-planner-v1';
+  let data={};
+  try{data=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){data={}}
+  const $=id=>document.getElementById(id);
+  const today=new Date(); const iso=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
+  $('plan-date').value=iso(today);
+  $('today-label').textContent=today.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  const tasksFor=date=>Array.isArray(data[date])?data[date]:[];
+  function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+  function render(){
+    const date=$('plan-date').value||iso(today),tasks=tasksFor(date),done=tasks.filter(t=>t.done).length,total=tasks.length,rate=total?Math.round(done/total*100):0;
+    $('day-name').textContent=new Date(date+'T12:00:00').toLocaleDateString(undefined,{weekday:'long'});
+    $('stat-total').textContent=total;$('stat-done').textContent=done;$('stat-rate').textContent=rate+'%';
+    $('progress-label').textContent=done+' of '+total+' done';$('progress-bar').style.width=rate+'%';
+    const list=$('task-list');list.innerHTML='';
+    if(!total){list.innerHTML='<div class="empty">No tasks for this date. Add your first study task above.</div>'}
+    tasks.forEach(task=>{
+      const row=document.createElement('label');row.className='task'+(task.done?' done':'');
+      const check=document.createElement('input');check.type='checkbox';check.checked=!!task.done;check.addEventListener('change',()=>{task.done=check.checked;save()});
+      const info=document.createElement('div');const title=document.createElement('div');title.className='tasktitle';title.textContent=task.title;const meta=document.createElement('div');meta.className='taskmeta';meta.textContent=task.subject;info.append(title,meta);
+      const tag=document.createElement('span');tag.className='tag';tag.textContent=task.kind;row.append(check,info,tag);list.append(row);
+    });
+    const all=Object.values(data).flat();$('all-done').textContent=all.filter(t=>t.done).length;$('all-pending').textContent=all.filter(t=>!t.done).length;$('all-dates').textContent=Object.keys(data).filter(k=>data[k]?.length).length;
+  }
+  $('task-form').addEventListener('submit',e=>{e.preventDefault();const title=$('task-title').value.trim();if(!title)return;const date=$('plan-date').value||iso(today);data[date]=tasksFor(date);data[date].push({id:Date.now(),title,subject:$('task-subject').value,kind:$('task-kind').value,done:false});$('task-title').value='';save()});
+  $('plan-date').addEventListener('change',render);$('today-btn').addEventListener('click',()=>{$('plan-date').value=iso(today);render()});
+  $('nav-today').addEventListener('click',()=>$('planner').scrollIntoView({behavior:'smooth'}));$('nav-subjects').addEventListener('click',()=>$('subjects').scrollIntoView({behavior:'smooth'}));$('nav-progress').addEventListener('click',()=>$('progress').scrollIntoView({behavior:'smooth'}));
+  render();
+})();
+</script>
+</body>
+</html>
