@@ -1,0 +1,11 @@
+{
+  "name": "NEET AI Planner — Personal Edition",
+  "short_name": "NEET Planner",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f7fb",
+  "theme_color": "#111c32",
+  "description": "A personal NEET study planner with a 655-lecture catalogue, day/week/month timetable, revision tracking and test analysis."
+}
