@@ -28,7 +28,7 @@ let state={lectures:[],tasks:[],revisions:[],tests:[],dailyPlans:[],weeklyPlans:
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function findArrays(o,depth=0,out=[]){if(!o||depth>7)return out;if(Array.isArray(o)){if(o.length&&typeof o[0]==='object'&&o[0]!==null)out.push(o);for(const v of o.slice(0,10))findArrays(v,depth+1,out)}else if(typeof o==='object'){for(const v of Object.values(o))findArrays(v,depth+1,out)}return out}
 function val(o,keys){for(const k of keys){if(o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k]}return ''}
-function normalizeLecture(o,i){const id=String(val(o,['id','lectureId','lecture_id','code','uid','Lecture ID','lectureID']));if(!/^(PHY|PCH|ICH|OCH|BOT|ZOO)-\d+/i.test(id))return null;const subj=String(val(o,['subject','branch','stream','Subject','Branch']));const mappedSubject=SUBJECTS.find(s=>s.toLowerCase()===subj.trim().toLowerCase())||subjectFromId(id);const chapter=String(val(o,['chapter','sourceChapter','source_chapter','Source chapter']));const topic=String(val(o,['topic','sourceTopic','source_topic','title','name','Source topic']));const planned=iso(val(o,['plannedDate','planned_date','date','newPlannedDate','assignedDate','New planned date']));return {id,subject:mappedSubject,chapter,topic,plannedDate:planned||todayISO(),originalDate:planned||todayISO(),status:String(val(o,['status','completionStatus','Status']))||'Not Started',completionDate:iso(val(o,['completionDate','completedAt']))||'',mcq:Number(val(o,['mcqsAttempted','mcqAttempted','MCQs attempted']))||0,accuracy:Number(val(o,['accuracy','accuracyPercent']))||0,notes:String(val(o,['notes','Notes'])||'')}}
+function normalizeLecture(o,i){const id=String(val(o,['id','lectureId','lecture_id','code','uid','Lecture ID','lectureID']));const custom=!!(o&&o.custom)||/^CUS-/i.test(id);if(!custom&&!/^(PHY|PCH|ICH|OCH|BOT|ZOO)-\d+/i.test(id))return null;const subj=String(val(o,['subject','branch','stream','Subject','Branch']));const mappedSubject=SUBJECTS.find(s=>s.toLowerCase()===subj.trim().toLowerCase())||subjectFromId(id);const chapter=String(val(o,['chapter','sourceChapter','source_chapter','Source chapter']));const topic=String(val(o,['topic','sourceTopic','source_topic','title','name','Source topic']));const planned=iso(val(o,['plannedDate','planned_date','date','newPlannedDate','assignedDate','New planned date']));return {id,subject:mappedSubject,chapter,topic,plannedDate:planned||todayISO(),originalDate:iso(val(o,['originalDate','original_date']))||planned||todayISO(),status:String(val(o,['status','completionStatus','Status']))||'Not Started',completionDate:iso(val(o,['completionDate','completedAt']))||'',mcq:Number(val(o,['mcq','mcqsAttempted','mcqAttempted','MCQs attempted']))||0,accuracy:Number(val(o,['accuracy','accuracyPercent']))||0,notes:String(val(o,['notes','Notes'])||''),...(custom?{custom:true}:{})}}
 function subjectFromId(id){return ({PHY:'Physics',PCH:'Physical Chemistry',ICH:'Inorganic Chemistry',OCH:'Organic Chemistry',BOT:'Botany',ZOO:'Zoology'})[id.slice(0,3).toUpperCase()]||'Other'}
 function extractLectures(obj){const arrays=findArrays(obj);let best=[];for(const a of arrays){const rows=a.map(normalizeLecture).filter(Boolean);if(rows.length>best.length)best=rows}return best}
 function dedupe(rows){const m=new Map();for(const x of rows)m.set(x.id,{...(m.get(x.id)||{}),...x});return [...m.values()]}
@@ -58,7 +58,42 @@ function safeReschedule(){const date=state.selectedDate,late=dueBacklog(date);if
 function addTest(){const date=prompt('Test date (YYYY-MM-DD)',state.selectedDate);if(!date)return;const name=prompt('Test name','Chapter / cumulative test')||'Practice test';state.tests.push({id:'test-'+Date.now(),date:iso(date),name,target:90,attempted:null,correct:null,incorrect:null,score:null,notes:''});save();render()}
 function testField(id,k,v){const t=state.tests.find(x=>x.id===id);if(!t)return;t[k]=k==='notes'?v:(v===''?null:Number(v));save()}
 function backup(){const payload={app:'NEET AI Planner Smart V2',version:2,exportedAt:new Date().toISOString(),state};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='neet-planner-v2-backup-'+todayISO()+'.json';a.click();URL.revokeObjectURL(a.href);$('#backupMsg').textContent='Backup downloaded.'}
-function importBackup(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);const importedState=data.state||data;const rows=extractLectures(importedState);if(rows.length){const old=new Map(state.lectures.map(x=>[x.id,x]));rows.forEach(x=>old.set(x.id,{...(old.get(x.id)||{}),...x}));state.lectures=[...old.values()]}const statusMap=seedFind(importedState,['lectureStatuses','lectureStatus','lecture_status','statuses']);if(statusMap&&!Array.isArray(statusMap)&&typeof statusMap==='object'){for(const [id,v] of Object.entries(statusMap)){const l=state.lectures.find(x=>x.id===id);if(l){l.status=typeof v==='string'?v:(v.status||l.status);l.completionDate=iso(v.completionDate||v.completedAt)||l.completionDate}}}const arrays=findArrays(importedState);const taskArr=seedFind(importedState,['tasks','customTasks','custom_tasks','userTasks','user_tasks']);if(taskArr)state.tasks=taskArr;const revArr=seedFind(importedState,['revisions','revisionCues','revision_cues']);if(revArr)state.revisions=revArr;const revisionMap=seedFind(importedState,['revisionStatus','revision_status']);if(revisionMap&&typeof revisionMap==='object'&&!Array.isArray(revisionMap)){for(const [id,v] of Object.entries(revisionMap)){const r=state.revisions.find(x=>x.id===id||x.lectureId===id);if(r)r.done=typeof v==='boolean'?v:!!(v.done||v.completed||v.status==='Completed')}}const testArr=seedFind(importedState,['tests','testResults','test_results']);if(Array.isArray(testArr))state.tests=testArr.map((t,i)=>({...t,id:t.id||'import-test-'+i,date:iso(t.date||t.testDate)}));else if(testArr&&typeof testArr==='object'&&Object.keys(testArr).length){state.tests=Object.entries(testArr).map(([id,t])=>({...t,id:t.id||id,date:iso(t.date||t.testDate)}))}const importedDate=iso(val(importedState,['selectedDate','selected_date']));if(importedDate)state.selectedDate=importedDate;const msg='Imported backup. '+rows.length+' lecture records found and merged. Please review counts/statuses before relying on this copy.';save();$('#backupMsg').textContent=msg;alert(msg);render()}catch(e){alert('Could not read this JSON backup: '+e.message)}};reader.readAsText(file)}
+function importBackup(file){
+if(!file)return;
+const reader=new FileReader();
+reader.onload=()=>{
+try{
+const data=JSON.parse(reader.result);
+const importedState=data&&data.state&&typeof data.state==='object'?data.state:data;
+if(!importedState||typeof importedState!=='object')throw Error('Backup format is not recognized.');
+let importedRows=[];
+if(Array.isArray(importedState.lectures))importedRows=importedState.lectures.map((x,i)=>normalizeLecture(x,i)).filter(Boolean);
+else importedRows=extractLectures(importedState);
+if(!importedRows.length)throw Error('No valid lecture records were found. Your existing planner data has not been changed.');
+const existing=new Map(state.lectures.map(x=>[x.id,x]));
+for(const row of importedRows)existing.set(row.id,{...(existing.get(row.id)||{}),...row});
+state.lectures=[...existing.values()];
+const taskArr=Array.isArray(importedState.tasks)?importedState.tasks:seedFind(importedState,['customTasks','custom_tasks','userTasks','user_tasks']);
+if(Array.isArray(taskArr))state.tasks=taskArr;
+const revArr=Array.isArray(importedState.revisions)?importedState.revisions:seedFind(importedState,['revisionCues','revision_cues']);
+if(Array.isArray(revArr))state.revisions=revArr;
+const testArr=Array.isArray(importedState.tests)?importedState.tests:seedFind(importedState,['testResults','test_results']);
+if(Array.isArray(testArr))state.tests=testArr.map((t,i)=>({...t,id:t.id||'import-test-'+i,date:iso(t.date||t.testDate)||t.date}));
+if(Array.isArray(importedState.dailyPlans))state.dailyPlans=importedState.dailyPlans;
+if(Array.isArray(importedState.weeklyPlans))state.weeklyPlans=importedState.weeklyPlans;
+if(Array.isArray(importedState.monthlyPlans))state.monthlyPlans=importedState.monthlyPlans;
+const importedDate=iso(val(importedState,['selectedDate','selected_date']));
+if(importedDate)state.selectedDate=importedDate;
+if(importedState.calendarMode)state.calendarMode=importedState.calendarMode;
+if(Number.isFinite(Number(importedState.monthOffset)))state.monthOffset=Number(importedState.monthOffset);
+save();
+const customCount=importedRows.filter(x=>x.custom||/^CUS-/i.test(x.id)).length;
+const msg='Backup restored: '+importedRows.length+' lecture records ('+customCount+' custom), '+state.tasks.length+' tasks, '+state.revisions.length+' revisions and '+state.tests.length+' tests. Existing catalogue entries were preserved.';
+$('#backupMsg').textContent=msg;alert(msg);render();
+}catch(e){alert('Could not restore this backup: '+e.message+' Your existing planner data was not intentionally reset.')}
+};
+reader.readAsText(file);
+}
 function exportCSV(){const rows=[['ID','Subject','Chapter','Topic','Planned date','Status','Completion date','MCQs attempted','Accuracy','Notes'],...state.lectures.map(x=>[x.id,x.subject,x.chapter,x.topic,x.plannedDate,x.status,x.completionDate,x.mcq,x.accuracy,x.notes])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='neet-lecture-tracker-v2.csv';a.click();URL.revokeObjectURL(a.href)}
 function filterLectures(){const q=$('#lectureSearch')?.value||'',s=$('#subjectFilter')?.value||'All';$('#lectureSearch').value=q;const active=document.querySelector('#nav button.active');render();if(active?.dataset.page==='lectures'){const si=$('#subjectFilter');if(si)si.value=s;const qi=$('#lectureSearch');if(qi){qi.value=q;qi.focus();qi.setSelectionRange(q.length,q.length)}}}
 function setDate(d){if(!d)return;state.selectedDate=d;save();render()}
