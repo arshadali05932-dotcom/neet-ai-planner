@@ -45,3 +45,17 @@ Open **Settings → Pages**. Choose **Deploy from a branch**, select `main` and 
 - Added persistent test-result entry and included it in JSON backups.
 - Added weekly subject-focus and monthly milestone panels.
 - Added app-shell service-worker caching for offline reopening after first load.
+
+
+## Smart Upgrade V2 (preview)
+
+A separate V2 workspace is available at `/v2/` after GitHub Pages deploys this branch to the default branch. It does not overwrite the original planner.
+
+V2 adds:
+- A separate local data store, leaving the original planner's browser data untouched.
+- Daily, weekly and monthly calendar navigation.
+- Lecture status updates with R+1, R+7 and R+21 revision cues generated on completion.
+- A conservative backlog action that proposes moving only one overdue entry at a time and protects planned test dates.
+- Test-result entry, subject progress, CSV export and JSON backup/restore.
+
+Important: V2 is an isolated first implementation. Import your downloaded JSON backup through **Backup & Settings → Import backup** and review the imported counts before relying on it. Because the original backup format may differ, the importer merges recognizable lecture records and known progress arrays; it cannot guarantee every legacy field will transfer. Keep the original planner and its backup unchanged until V2 has been checked on your device. The weekly/monthly summaries use seed-data fields when present; verify that all 655 lecture rows load before use.
